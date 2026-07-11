@@ -40,7 +40,7 @@ function App() {
                     />
             <button type="submit">Envoyer</button>
                 {response && (
-                   <p>{response.message}</p>
+                   <p>{response.content}</p>
                 )}
         </form>
 
