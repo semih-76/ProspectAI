@@ -54,4 +54,21 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+const getMe = async (req, res) => {
+    const userId = req.userId;
+    try {
+    const [rows] = await pool.query('SELECT id, nom, prenom, email, entreprise FROM users WHERE id = ?', [userId]);
+   
+    if (rows.length === 0) {
+        return res.status(404).json({ error: 'Utilisateur introuvable'});
+    }
+
+    res.json(rows[0]);
+
+    } catch (error) {   
+        console.error('Erreurde récupération infos', error.message);
+        return res.status(500).json({ error: 'Erreur serveur'});
+    }
+}
+
+module.exports = { register, login, getMe };
