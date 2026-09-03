@@ -5,6 +5,8 @@ const authRoutes = require('./routes/authRoutes');
 const cors = require('cors');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const verifytoken = require('./middleware/authMiddleware.js');
+const pool = require('./config/db.js');
 
 const app = express();
 
@@ -13,7 +15,7 @@ app.use(express.json());
 app.use('/api', authRoutes);
 
 
-app.post('/api/generate-email', async (req,res) => {
+app.post('/api/generate-email', verifytoken, async (req, res) => {
     const { url } = req.body;
     console.log('URL reçue:', url);
 
@@ -43,6 +45,8 @@ Corps de l'email : [Le texte de l'email]`;
             }
         );
         const emailGenere = geminiResponse.data.candidates[0].content.parts[0].text;
+        const userId = req.userId;
+        await pool.query('INSERT INTO emails_generes (user_id, url, contenu_scrape, email_genere) VALUES (?, ?, ?, ?)', [userId, url, cleanContent, emailGenere]);
         res.json({ content: emailGenere });
     } catch (error) {
         console.error('Erreur Scrapping:', error.message);
@@ -50,7 +54,7 @@ Corps de l'email : [Le texte de l'email]`;
     }
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
