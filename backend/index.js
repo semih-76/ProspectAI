@@ -14,6 +14,23 @@ app.use(cors());
 app.use(express.json());
 app.use('/api', authRoutes);
 
+const scrapeWithRetry = async (url, maxRetries = 3) => {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const { data } = await axios.get(url, {
+                headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+            });
+            return data;
+        } catch (error) {
+            console.log(`Tentative ${i + 1} échouée`);
+            if (i === maxRetries - 1) {
+                throw error
+            }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+};
 
 app.post('/api/generate-email', verifytoken, async (req, res) => {
     const { url, customInstructions } = req.body;
@@ -21,11 +38,7 @@ app.post('/api/generate-email', verifytoken, async (req, res) => {
     console.log('URL reçue:', url);
 
     try {
-        const { data } = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-        });
+        const data = await scrapeWithRetry(url);
         const $ = cheerio.load(data);
         const title = $('title').text();
         const paragraphs = $('p').text();

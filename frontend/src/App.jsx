@@ -1,5 +1,5 @@
 import './App.css'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
 
@@ -47,7 +47,15 @@ function App() {
 
         const data = await res.json();
         setToken(data.token);
+        localStorage.setItem('token', data.token);
     }
+
+    useEffect(() => {
+        const savedToken = localStorage.getItem('token');
+        if (savedToken) {
+            setToken(savedToken);
+        }
+    }, []);
 
     return(
         <>
