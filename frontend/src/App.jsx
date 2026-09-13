@@ -59,6 +59,7 @@ function App() {
 
     return(
         <>
+            {!token && (
             <form onSubmit={handleLogin}>
     <input
         type="email"
@@ -74,8 +75,10 @@ function App() {
     />
     <button type="submit">Se connecter</button>
 </form>
-
+)}
+            {token && (
             <form onSubmit={handleSubmit}>
+
                     <input
                         type="text"
                         value={url}
@@ -94,7 +97,7 @@ function App() {
                    <p>{response.content}</p>
                 )}
         </form>
-
+        )}
             </>
   )
 }
