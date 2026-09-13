@@ -16,11 +16,16 @@ app.use('/api', authRoutes);
 
 
 app.post('/api/generate-email', verifytoken, async (req, res) => {
-    const { url } = req.body;
+    const { url, customInstructions } = req.body;
+    const instructionSection = customInstructions ? `6. PROMPT IA : Rédige le mail en prenant en compte les instructions suivantes à la lettre : ${customInstructions}.` : '';
     console.log('URL reçue:', url);
 
     try {
-        const { data } = await axios.get(url);
+        const { data } = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
         const $ = cheerio.load(data);
         const title = $('title').text();
         const paragraphs = $('p').text();
@@ -36,6 +41,7 @@ Voici tes consignes strictes pour la rédaction :
 4. LE TON : Parle comme un humain s'adresse à un autre humain. Sois direct, chaleureux mais professionnel. Supprime tout le jargon marketing bidon ("solution révolutionnaire", "synergie", "leader du marché").
 5. LE FORMAT : L'email doit faire moins de 100 mots au total. Sauts de lignes obligatoires entre chaque phrase pour que ce soit ultra-lisible sur un écran d'iPhone.
 Génère uniquement :
+${instructionSection}
 Objet : [Un objet court de 3 à 5 mots max, intrigant, sans majuscules agressives]
 Corps de l'email : [Le texte de l'email]`;
         const geminiResponse = await axios.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY, {
